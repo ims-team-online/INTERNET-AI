@@ -39,15 +39,17 @@ export default function App() {
     setIsGenerating(true);
 
     try {
-      if (mode === 'text') {
-        // Direct call to Gemini API
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AQ.Ab8RN6IepkqU96nQY1_TmNe3nZZ66quAHT7v9llmfpAeZVtwGQ`,
-
-
+        if (mode === 'text') {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6IepkqU96nQY1_TmNe3nZZ66quAHT7v9llmfpAeZVtwGQ`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: userMsg.text }] }] })
+          }
+        );
+        const data = await response.json();
+
           }
         );
         const data = await response.json();
