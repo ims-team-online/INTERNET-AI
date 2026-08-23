@@ -67,13 +67,27 @@ function App() {
 
     try {
       if (mode === 'text') {
-        const systemPrompt = "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. User: " + (fmpUser || "Guest") + ". Mood: " + userMood + ".";
-        
-        // Free open endpoint - No API key required
-        const apiUrl = 'https://text.pollinations.ai/' + encodeURIComponent(systemPrompt + "\n\nUser: " + userMsg.text);
+        const systemPrompt = "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. User: " + (fmpUser || "Guest") + ". Mood: " + userMood + ". Keep responses clear and direct.";
 
-        const response = await fetch(apiUrl);
-        const aiReply = await response.text();
+        // Free Open AI Gateway (No API key needed)
+        const response = await fetch('https://text.pollinations.ai/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: currentInput }
+            ],
+            model: 'openai'
+          })
+        });
+
+        let aiReply = '';
+        if (response.ok) {
+          aiReply = await response.text();
+        } else {
+          aiReply = "INTERNET.AI System Notice: Unable to connect right now. Please try again in a moment.";
+        }
 
         setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
         speakText(aiReply);
