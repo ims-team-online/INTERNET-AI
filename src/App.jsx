@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-// Securely read key from .env file or Render environment variables
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+// 🔑 PASTE YOUR FULL KEY BETWEEN THE QUOTES BELOW:
+const GEMINI_API_KEY = "AQ.Ab8RN6Jr6LMsqBEOjszdbZFFW6jVI0ccSdVCuwBz_J6Ad8jl...";
 
 function App() {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState('dark');
-  const [userMood, setUserMood] = useState('Focused');
   const [voiceStyle, setVoiceStyle] = useState('soft');
   const [input, setInput] = useState('');
   const [mode, setMode] = useState('text');
@@ -45,7 +44,7 @@ function App() {
   const messages = activeSession ? activeSession.messages : [];
 
   useEffect(function() {
-    const timer = setTimeout(function() { setLoading(false); }, 1200);
+    const timer = setTimeout(function() { setLoading(false); }, 2000);
     return function() { clearTimeout(timer); };
   }, []);
 
@@ -142,7 +141,7 @@ function App() {
     });
   };
 
-  // Official Gemini AI Call
+  // Official Gemini Call
   const handleSend = async function() {
     if (!input.trim() || isGenerating) return;
 
@@ -155,7 +154,7 @@ function App() {
     try {
       if (mode === 'text') {
         if (!GEMINI_API_KEY) {
-          throw new Error("Missing API Key! Set VITE_GEMINI_API_KEY in your .env file or Render settings.");
+          throw new Error("Missing API Key! Set GEMINI_API_KEY in App.jsx or environment variables.");
         }
 
         const res = await fetch(
@@ -170,9 +169,9 @@ function App() {
         );
 
         const data = await res.json();
-        
+
         if (data.error) {
-          throw new Error(data.error.message || "API Error");
+          throw new Error(data.error.message || "Gemini API Error");
         }
 
         const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
@@ -191,11 +190,14 @@ function App() {
     }
   };
 
+  // Custom Welcome / Splash Screen
   if (loading) {
     return (
       <div style={splashStyle}>
-        <h1>IMS WORKSPACE</h1>
-        <p>Initializing Real AI Engine...</p>
+        <h1 style={{ fontSize: '28px', marginBottom: '10px', textAlign: 'center', color: '#60a5fa' }}>
+          WELCOME TO IMS WORKSPACE INTERNET.AI
+        </h1>
+        <p style={{ opacity: 0.8 }}>Initializing Real AI Engine...</p>
       </div>
     );
   }
@@ -324,7 +326,7 @@ function App() {
   );
 }
 
-const splashStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#0f172a', color: '#fff' };
+const splashStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#0f172a', color: '#fff', padding: '20px' };
 const loginStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#0f172a', color: '#fff' };
 const inputFieldStyle = { padding: '10px', borderRadius: '6px', border: '1px solid #334155', marginBottom: '12px', width: '80%', maxWidth: '280px', backgroundColor: '#1e293b', color: '#fff' };
 const buttonStyle = { padding: '10px 20px', borderRadius: '6px', backgroundColor: '#2563eb', color: '#fff', border: 'none', fontWeight: 'bold' };
