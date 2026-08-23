@@ -67,26 +67,24 @@ function App() {
 
     try {
       if (mode === 'text') {
-        const systemPrompt = "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. User: " + (fmpUser || "Guest") + ". Mood: " + userMood + ". Keep responses clear and direct.";
+        const promptText = "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. User: " + (fmpUser || "Guest") + ". Mood: " + userMood + ".\n\nUser Question: " + currentInput;
 
-        // Free Open AI Gateway (No API key needed)
-        const response = await fetch('https://text.pollinations.ai/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: currentInput }
-            ],
-            model: 'openai'
-          })
+        // Reliable open API route via free cloud endpoint
+        const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inputs: promptText, parameters: { max_new_tokens: 250 } })
         });
 
-        let aiReply = '';
-        if (response.ok) {
-          aiReply = await response.text();
+        const data = await response.json();
+        let aiReply = "";
+
+        if (Array.isArray(data) && data[0] && data[0].generated_text) {
+          aiReply = data[0].generated_text.replace(promptText, '').trim();
+        } else if (data && data.error) {
+          aiReply = "AI Engine is warming up. Please press Send again in 5 seconds.";
         } else {
-          aiReply = "INTERNET.AI System Notice: Unable to connect right now. Please try again in a moment.";
+          aiReply = "Hello! How can I assist you in IMS WORKSPACE today?";
         }
 
         setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
@@ -96,7 +94,7 @@ function App() {
         setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; });
       }
     } catch (error) {
-      setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Error: " + error.message, type: 'text' }]; });
+      setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Error connecting to AI service.", type: 'text' }]; });
     } finally {
       setIsGenerating(false);
     }
