@@ -14,35 +14,20 @@ html, body, #root {
   background-color: #0f172a;
 }
 
-/* Container locking elements to screen height */
 .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100dvh; /* Adapts to browser address bar */
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
+  position: relative;
 }
 
-.app-container.dark {
-  background-color: #0f172a;
-  color: #f8fafc;
-}
-
-.app-container.light {
-  background-color: #f8fafc;
-  color: #0f172a;
-}
-
-.app-container.neon {
-  background-color: #0d0221;
-  color: #00f6ff;
-}
-
-.app-container.sunset {
-  background-color: #2d112c;
-  color: #ffb4a2;
-}
+.app-container.dark { background-color: #0f172a; color: #f8fafc; }
+.app-container.light { background-color: #f8fafc; color: #0f172a; }
+.app-container.neon { background-color: #0d0221; color: #00f6ff; }
+.app-container.sunset { background-color: #2d112c; color: #ffb4a2; }
 
 /* Top Navigation Bar */
 .top-bar {
@@ -60,7 +45,7 @@ html, body, #root {
   gap: 6px;
 }
 
-.top-controls select, .top-controls button {
+.top-controls button {
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -69,7 +54,91 @@ html, body, #root {
   font-size: 11px;
 }
 
-/* Chat Feed (Takes remaining space and scrolls internally) */
+/* Modals for Settings & History */
+.modal-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  background: #1e293b;
+  color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-row select {
+  padding: 6px;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #0f172a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.history-item.active { border: 1px solid #2563eb; }
+.history-item button { background: none; border: none; color: #ef4444; }
+
+.close-btn {
+  padding: 8px;
+  background: #2563eb;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Video Feed Preview */
+.video-preview-container {
+  padding: 8px;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.video-preview {
+  width: 100%;
+  max-height: 160px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Chat Feed */
 .chat-box {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -91,35 +160,25 @@ html, body, #root {
 
 .message img {
   max-width: 100%;
-  max-height: 200px;
+  max-height: 220px;
   object-fit: contain;
   border-radius: 8px;
   display: block;
 }
 
-.message.user {
-  align-self: flex-end;
-  background-color: #2563eb;
-  color: #ffffff;
-}
+.message.user { align-self: flex-end; background-color: #2563eb; color: #ffffff; }
+.message.ai { align-self: flex-start; background-color: #1e293b; color: #f8fafc; }
 
-.message.ai {
-  align-self: flex-start;
-  background-color: #1e293b;
-  color: #f8fafc;
-}
-
-/* Bottom Controls */
-.controls {
+/* Control & Media Bar */
+.controls, .live-media-bar {
   display: flex;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   background: rgba(15, 23, 42, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
   flex: 0 0 auto;
 }
 
-.controls button {
+.controls button, .live-media-bar button {
   flex: 1;
   padding: 8px;
   border: none;
@@ -130,11 +189,11 @@ html, body, #root {
   font-size: 12px;
 }
 
-.controls button.active {
+.controls button.active, .live-media-bar button.active-media {
   background: #2563eb;
 }
 
-/* Bottom Input Area */
+/* Input Area */
 .input-box {
   display: flex;
   padding: 10px 12px;
