@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-// 🔑 PASTE YOUR FULL KEY BETWEEN THE QUOTES BELOW:
-const GEMINI_API_KEY = "AQ.Ab8RN6Jr6LMsqBEOjszdbZFFW6jVI0ccSdVCuwBz_J6Ad8jl...";
-
 function App() {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState('dark');
@@ -141,7 +138,7 @@ function App() {
     });
   };
 
-  // Official Gemini Call
+  // Public AI Service Call (No Keys Needed)
   const handleSend = async function() {
     if (!input.trim() || isGenerating) return;
 
@@ -153,48 +150,46 @@ function App() {
 
     try {
       if (mode === 'text') {
-        if (!GEMINI_API_KEY) {
-          throw new Error("Missing API Key! Set GEMINI_API_KEY in App.jsx or environment variables.");
+        const res = await fetch("https://text.pollinations.ai/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: currentInput }],
+            model: "openai"
+          })
+        });
+
+        const aiReply = await res.text();
+
+        if (!aiReply || aiReply.includes("Error")) {
+          throw new Error("Service temporarily busy. Please try sending again.");
         }
 
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: currentInput }] }]
-            })
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.error) {
-          throw new Error(data.error.message || "Gemini API Error");
-        }
-
-        const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
-
-        updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
+        updateCurrentMessages(function(prev) { 
+          return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; 
+        });
         speakText(aiReply);
       } else {
         const enhancedPrompt = encodeURIComponent(currentInput + ", high quality digital render");
         const imageUrl = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=800&height=800&nologo=true`;
-        updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; });
+        updateCurrentMessages(function(prev) { 
+          return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; 
+        });
       }
     } catch (err) {
-      updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: `⚠️ ${err.message}`, type: 'text' }]; });
+      updateCurrentMessages(function(prev) { 
+        return [...prev, { id: Date.now() + 1, sender: 'ai', text: `⚠️ ${err.message}`, type: 'text' }]; 
+      });
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Custom Welcome / Splash Screen
+  // Welcome Screen
   if (loading) {
     return (
       <div style={splashStyle}>
-        <h1 style={{ fontSize: '28px', marginBottom: '10px', textAlign: 'center', color: '#60a5fa' }}>
+        <h1 style={{ fontSize: '26px', marginBottom: '10px', textAlign: 'center', color: '#60a5fa' }}>
           WELCOME TO IMS WORKSPACE INTERNET.AI
         </h1>
         <p style={{ opacity: 0.8 }}>Initializing Real AI Engine...</p>
