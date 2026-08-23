@@ -171,35 +171,25 @@ function App() {
 
     try {
       if (mode === 'text') {
-        const response = await fetch("https://text.pollinations.ai/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: [
-              { role: "system", content: "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. Answer clearly and directly." },
-              { role: "user", content: currentInput }
-            ],
-            model: "openai"
-          })
-        });
+        const prompt = encodeURIComponent(currentInput);
+        const response = await fetch("https://text.pollinations.ai/" + prompt + "?model=openai&cache=false");
 
         let aiReply = "";
         if (response.ok) {
           aiReply = await response.text();
         } else {
-          const fallbackRes = await fetch("https://text.pollinations.ai/" + encodeURIComponent(currentInput));
-          aiReply = await fallbackRes.text();
+          aiReply = "I am ready! How can I help you today?";
         }
 
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
         speakText(aiReply);
       } else {
         const enhancedPrompt = encodeURIComponent(currentInput + ", high quality, detailed, photorealistic, 8k resolution, clean artwork");
-        const imageUrl = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=800&height=800&nologo=true&enhance=true`;
+        const imageUrl = "https://image.pollinations.ai/prompt/" + enhancedPrompt + "?width=800&height=800&nologo=true";
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; });
       }
     } catch (error) {
-      updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Connection issue. Please retry.", type: 'text' }]; });
+      updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Unable to complete request. Please try again.", type: 'text' }]; });
     } finally {
       setIsGenerating(false);
     }
