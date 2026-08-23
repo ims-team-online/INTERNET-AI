@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import './App.css';
-
+const genAI = new GoogleGenerativeAI("AQ.Ab8RN6JHw-kg5p7LgU8TaOdJd9s46hTT4zIe0flYJYH4IPPuqw");
 export default function App() {
   // --- States ---
   const [showSplash, setShowSplash] = useState(true);
@@ -39,7 +39,7 @@ export default function App() {
     setIsGenerating(true);
 
     try {
-        if (mode === 'text') {
+      if (mode === 'text') {
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AQ.Ab8RN6IepkqU96nQY1_TmNe3nZZ66quAHT7v9llmfpAeZVtwGQ`,
           {
@@ -49,12 +49,8 @@ export default function App() {
           }
         );
         const data = await response.json();
-
-          }
-        );
-        const data = await response.json();
         const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "System Error: Unable to fetch response.";
-        
+
         setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: aiReply, type: 'text' }]);
       } else {
         // Image generation simulation (Pollinations API endpoint)
