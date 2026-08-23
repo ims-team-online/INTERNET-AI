@@ -1,44 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-// Local Knowledge Base & Intent Engine
-const KNOWLEDGE_BASE = [
-  {
-    keywords: ['founder of google', 'who founded google', 'creator of google', 'who made google'],
-    answer: "Google was founded in September 1998 by Larry Page and Sergey Brin while they were Ph.D. students at Stanford University."
-  },
-  {
-    keywords: ['who are you', 'your name', 'what is internet ai'],
-    answer: "I am INTERNET.AI, a custom artificial intelligence built for the IMS WORKSPACE platform by Ijot Gunjan Jha."
-  },
-  {
-    keywords: ['what is maths', 'what is math', 'define mathematics'],
-    answer: "Mathematics is the abstract science of numbers, quantity, structure, space, and change. It uses logical reasoning to analyze patterns and solve problems."
-  },
-  {
-    keywords: ['hi', 'hello', 'hey', 'greetings'],
-    answer: "Hello! I am connected to the IMS WORKSPACE engine. How can I help you today?"
-  }
-];
-
-function generateCustomResponse(prompt) {
-  const cleanPrompt = prompt.toLowerCase().trim();
-
-  // 1. Check exact/keyword match in Knowledge Base
-  for (const item of KNOWLEDGE_BASE) {
-    if (item.keywords.some(kw => cleanPrompt.includes(kw))) {
-      return item.answer;
-    }
-  }
-
-  // 2. Local Conversational Logic
-  if (cleanPrompt.startsWith('what is') || cleanPrompt.startsWith('explain')) {
-    const topic = prompt.replace(/what is|explain|tell me about/gi, '').trim();
-    return `Here is what I know about ${topic}: It is a topic defined by key principles, structure, and factual attributes. If you'd like deeper analysis on ${topic}, let me know!`;
-  }
-
-  return `I processed your request regarding "${prompt}". As a locally running AI model, I am continually updating my internal dataset.`;
-}
+// Securely read key from .env file or Render environment variables
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -178,7 +142,7 @@ function App() {
     });
   };
 
-  // Engine Send Handler
+  // Official Gemini AI Call
   const handleSend = async function() {
     if (!input.trim() || isGenerating) return;
 
@@ -188,25 +152,50 @@ function App() {
     setInput('');
     setIsGenerating(true);
 
-    setTimeout(() => {
+    try {
       if (mode === 'text') {
-        const aiReply = generateCustomResponse(currentInput);
+        if (!GEMINI_API_KEY) {
+          throw new Error("Missing API Key! Set VITE_GEMINI_API_KEY in your .env file or Render settings.");
+        }
+
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: currentInput }] }]
+            })
+          }
+        );
+
+        const data = await res.json();
+        
+        if (data.error) {
+          throw new Error(data.error.message || "API Error");
+        }
+
+        const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
+
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
         speakText(aiReply);
       } else {
-        const enhancedPrompt = encodeURIComponent(currentInput + ", clean art, high quality");
-        const imageUrl = "https://image.pollinations.ai/prompt/" + enhancedPrompt + "?width=800&height=800&nologo=true";
+        const enhancedPrompt = encodeURIComponent(currentInput + ", high quality digital render");
+        const imageUrl = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=800&height=800&nologo=true`;
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; });
       }
+    } catch (err) {
+      updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: `⚠️ ${err.message}`, type: 'text' }]; });
+    } finally {
       setIsGenerating(false);
-    }, 400);
+    }
   };
 
   if (loading) {
     return (
       <div style={splashStyle}>
         <h1>IMS WORKSPACE</h1>
-        <p>Loading Custom Local AI Engine...</p>
+        <p>Initializing Real AI Engine...</p>
       </div>
     );
   }
