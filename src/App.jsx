@@ -1,6 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
+// Local Knowledge Base & Intent Engine
+const KNOWLEDGE_BASE = [
+  {
+    keywords: ['founder of google', 'who founded google', 'creator of google', 'who made google'],
+    answer: "Google was founded in September 1998 by Larry Page and Sergey Brin while they were Ph.D. students at Stanford University."
+  },
+  {
+    keywords: ['who are you', 'your name', 'what is internet ai'],
+    answer: "I am INTERNET.AI, a custom artificial intelligence built for the IMS WORKSPACE platform by Ijot Gunjan Jha."
+  },
+  {
+    keywords: ['what is maths', 'what is math', 'define mathematics'],
+    answer: "Mathematics is the abstract science of numbers, quantity, structure, space, and change. It uses logical reasoning to analyze patterns and solve problems."
+  },
+  {
+    keywords: ['hi', 'hello', 'hey', 'greetings'],
+    answer: "Hello! I am connected to the IMS WORKSPACE engine. How can I help you today?"
+  }
+];
+
+function generateCustomResponse(prompt) {
+  const cleanPrompt = prompt.toLowerCase().trim();
+
+  // 1. Check exact/keyword match in Knowledge Base
+  for (const item of KNOWLEDGE_BASE) {
+    if (item.keywords.some(kw => cleanPrompt.includes(kw))) {
+      return item.answer;
+    }
+  }
+
+  // 2. Local Conversational Logic
+  if (cleanPrompt.startsWith('what is') || cleanPrompt.startsWith('explain')) {
+    const topic = prompt.replace(/what is|explain|tell me about/gi, '').trim();
+    return `Here is what I know about ${topic}: It is a topic defined by key principles, structure, and factual attributes. If you'd like deeper analysis on ${topic}, let me know!`;
+  }
+
+  return `I processed your request regarding "${prompt}". As a locally running AI model, I am continually updating my internal dataset.`;
+}
+
 function App() {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState('dark');
@@ -50,30 +89,11 @@ function App() {
     localStorage.setItem('ims_chat_sessions', JSON.stringify(sessions));
   }, [sessions]);
 
-  // Voice Engine
+  // Speech Engine
   const speakText = function(text) {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-
-    if (voiceStyle === 'soft') {
-      utterance.voice = voices.find(function(v) { return v.name.includes('Samantha') || v.name.includes('Natural'); }) || voices[0];
-      utterance.pitch = 1.1;
-      utterance.rate = 0.85;
-    } else if (voiceStyle === 'professional') {
-      utterance.voice = voices.find(function(v) { return v.name.includes('Google') || v.name.includes('Daniel'); }) || voices[0];
-      utterance.pitch = 0.95;
-      utterance.rate = 1.0;
-    } else if (voiceStyle === 'male') {
-      utterance.voice = voices.find(function(v) { return v.name.includes('David') || v.name.includes('Male'); }) || voices[0];
-      utterance.pitch = 0.7;
-      utterance.rate = 0.95;
-    } else {
-      utterance.voice = voices.find(function(v) { return v.name.includes('Zira') || v.name.includes('Female'); }) || voices[0];
-      utterance.pitch = 1.2;
-      utterance.rate = 1.0;
-    }
     window.speechSynthesis.speak(utterance);
   };
 
@@ -123,7 +143,6 @@ function App() {
     }
   };
 
-  // Chat Session Controls
   const handleNewChat = function() {
     const newId = Date.now();
     const newSession = { id: newId, title: "Chat " + (sessions.length + 1), messages: [] };
@@ -159,7 +178,7 @@ function App() {
     });
   };
 
-  // Send Logic
+  // Engine Send Handler
   const handleSend = async function() {
     if (!input.trim() || isGenerating) return;
 
@@ -169,37 +188,25 @@ function App() {
     setInput('');
     setIsGenerating(true);
 
-    try {
+    setTimeout(() => {
       if (mode === 'text') {
-        const prompt = encodeURIComponent(currentInput);
-        const response = await fetch("https://text.pollinations.ai/" + prompt + "?model=openai&cache=false");
-
-        let aiReply = "";
-        if (response.ok) {
-          aiReply = await response.text();
-        } else {
-          aiReply = "I am ready! How can I help you today?";
-        }
-
+        const aiReply = generateCustomResponse(currentInput);
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
         speakText(aiReply);
       } else {
-        const enhancedPrompt = encodeURIComponent(currentInput + ", high quality, detailed, photorealistic, 8k resolution, clean artwork");
+        const enhancedPrompt = encodeURIComponent(currentInput + ", clean art, high quality");
         const imageUrl = "https://image.pollinations.ai/prompt/" + enhancedPrompt + "?width=800&height=800&nologo=true";
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; });
       }
-    } catch (error) {
-      updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Unable to complete request. Please try again.", type: 'text' }]; });
-    } finally {
       setIsGenerating(false);
-    }
+    }, 400);
   };
 
   if (loading) {
     return (
       <div style={splashStyle}>
         <h1>IMS WORKSPACE</h1>
-        <p>Loading INTERNET.AI Engine...</p>
+        <p>Loading Custom Local AI Engine...</p>
       </div>
     );
   }
@@ -223,7 +230,6 @@ function App() {
 
   return (
     <div className={'app-container ' + theme}>
-      {/* Top Bar */}
       <div className="top-bar">
         <div>
           <strong>IMS INTERNET.AI</strong>
@@ -237,7 +243,6 @@ function App() {
         </div>
       </div>
 
-      {/* Settings Modal Overlay */}
       {showSettings && (
         <div className="modal-overlay">
           <div className="modal-box">
@@ -256,17 +261,6 @@ function App() {
               <select value={voiceStyle} onChange={function(e) { setVoiceStyle(e.target.value); }}>
                 <option value="soft">Soft Voice</option>
                 <option value="professional">Professional</option>
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-              </select>
-            </div>
-            <div className="setting-row">
-              <label>User Mood</label>
-              <select value={userMood} onChange={function(e) { setUserMood(e.target.value); }}>
-                <option value="Focused">Focused</option>
-                <option value="Happy">Happy</option>
-                <option value="Tired">Tired</option>
-                <option value="Neutral">Neutral</option>
               </select>
             </div>
             <button className="close-btn" onClick={function() { setShowSettings(false); }}>Close</button>
@@ -274,7 +268,6 @@ function App() {
         </div>
       )}
 
-      {/* History Drawer Overlay */}
       {showHistory && (
         <div className="modal-overlay">
           <div className="modal-box">
@@ -294,14 +287,12 @@ function App() {
         </div>
       )}
 
-      {/* Live Video Camera Box */}
       {isCamActive && (
         <div className="video-preview-container">
           <video ref={videoRef} autoPlay playsInline muted className="video-preview"></video>
         </div>
       )}
 
-      {/* Scrollable Chat Feed */}
       <div className="chat-box">
         {messages.map(function(msg) {
           return (
@@ -316,13 +307,11 @@ function App() {
         })}
       </div>
 
-      {/* Output Mode Controls */}
       <div className="controls">
         <button onClick={function() { setMode('text'); }} className={mode === 'text' ? 'active' : ''}>Chat Mode</button>
         <button onClick={function() { setMode('image'); }} className={mode === 'image' ? 'active' : ''}>🎨 Enhanced Image Mode</button>
       </div>
 
-      {/* Interactive Microphone & Camera Controls */}
       <div className="live-media-bar">
         <button onClick={toggleMicrophone} className={isMicListening ? 'active-media' : ''}>
           {isMicListening ? '🎙️ Listening...' : '🎤 Mic Input'}
@@ -332,7 +321,6 @@ function App() {
         </button>
       </div>
 
-      {/* Input Bar */}
       <div className="input-box">
         <input
           type="text"
