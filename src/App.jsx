@@ -171,27 +171,35 @@ function App() {
 
     try {
       if (mode === 'text') {
-        const promptText = "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. User: " + (fmpUser || "Guest") + ". Mood: " + userMood + ".\n\nQuestion: " + currentInput;
-        const encodedPrompt = encodeURIComponent(promptText);
-        const response = await fetch(`https://text.pollinations.ai/${encodedPrompt}`);
+        const response = await fetch("https://text.pollinations.ai/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [
+              { role: "system", content: "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. Answer clearly and directly." },
+              { role: "user", content: currentInput }
+            ],
+            model: "openai"
+          })
+        });
 
         let aiReply = "";
         if (response.ok) {
           aiReply = await response.text();
         } else {
-          aiReply = "I am connected! How can I assist you today on IMS WORKSPACE?";
+          const fallbackRes = await fetch("https://text.pollinations.ai/" + encodeURIComponent(currentInput));
+          aiReply = await fallbackRes.text();
         }
 
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
         speakText(aiReply);
       } else {
-        // High Quality Improved Image Generation Prompt
-        const enhancedPrompt = encodeURIComponent(currentInput + ", high quality, detailed, realistic, clean composition, 8k resolution");
+        const enhancedPrompt = encodeURIComponent(currentInput + ", high quality, detailed, photorealistic, 8k resolution, clean artwork");
         const imageUrl = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=800&height=800&nologo=true&enhance=true`;
         updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; });
       }
     } catch (error) {
-      updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Connection issue. Please retry your input.", type: 'text' }]; });
+      updateCurrentMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Connection issue. Please retry.", type: 'text' }]; });
     } finally {
       setIsGenerating(false);
     }
