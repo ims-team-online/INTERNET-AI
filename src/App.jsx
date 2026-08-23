@@ -69,22 +69,21 @@ function App() {
       if (mode === 'text') {
         const promptText = "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. User: " + (fmpUser || "Guest") + ". Mood: " + userMood + ".\n\nUser Question: " + currentInput;
 
-        // Reliable open API route via free cloud endpoint
-        const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
+        // Fallback working open mirror endpoint
+        const response = await fetch("https://text.pollinations.ai/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ inputs: promptText, parameters: { max_new_tokens: 250 } })
+          body: JSON.stringify({
+            messages: [{ role: "user", content: promptText }]
+          })
         });
 
-        const data = await response.json();
         let aiReply = "";
-
-        if (Array.isArray(data) && data[0] && data[0].generated_text) {
-          aiReply = data[0].generated_text.replace(promptText, '').trim();
-        } else if (data && data.error) {
-          aiReply = "AI Engine is warming up. Please press Send again in 5 seconds.";
+        if (response.ok) {
+          aiReply = await response.text();
         } else {
-          aiReply = "Hello! How can I assist you in IMS WORKSPACE today?";
+          // If public API fails, provide clear feedback
+          aiReply = "Service temporarily busy. Please check your network connection and try again.";
         }
 
         setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: aiReply, type: 'text' }]; });
@@ -94,7 +93,7 @@ function App() {
         setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: currentInput, imageUrl: imageUrl, type: 'image' }]; });
       }
     } catch (error) {
-      setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Error connecting to AI service.", type: 'text' }]; });
+      setMessages(function(prev) { return [...prev, { id: Date.now() + 1, sender: 'ai', text: "Connection error. Please try sending again.", type: 'text' }]; });
     } finally {
       setIsGenerating(false);
     }
