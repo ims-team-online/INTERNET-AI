@@ -77,10 +77,11 @@ function App() {
 
     try {
       if (mode === 'text') {
-        const apiKey = 'AQ.Ab8RN6LALyoJ7gSAvCj1aH2j-rc97ZpJ3UdcZj8IC038Sc2suA';
+        const apiKey = 'AQ.Ab8RN6JlJkNuTw35yZSVGFHzu_a6i757PYEDlp7sUxMSJUSqtQ';
+
         const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
 
-        const systemPrompt = "You are INTERNET.AI by IMS WORKSPACE created by Ijot Gunjan Jha. The logged-in FMP User is: " + (fmpUser || "Guest") + ". The user's current mood is: " + userMood + ". Keep answers clear and tailored to their mood.";
+        const systemPrompt = "You are INTERNET.AI by IMS WORKSPACE created by IMS-TEAM-ONLINE. The logged-in FMP User is: " + (fmpUser || "Guest") + ". The user's current mood is: " + userMood + ". Keep answers clear and tailored to their mood.";
 
         const response = await fetch(apiUrl, {
           method: 'POST',
